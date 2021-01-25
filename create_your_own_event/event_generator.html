@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<link rel="stylesheet" href="web-files/common-style.css">
+	<link rel="stylesheet" href="web-files/generator-style.css">
+	<script src="web-files/jquery-2.2.0.min.js"></script>
+	<script>
+		function resetFieldsToDefault() {
+			$("#deviceType").prop("selectedIndex", 0);
+		}
+	
+		function roughScale(x) {
+			const parsed = Number.parseInt(x, 10);
+			if (Number.isNaN(parsed)) {
+				return x;
+			}
+			return parsed;
+		}
+		
+		function getDeviceType() {
+			if ($("#deviceType").val() == "rgb-zoned-device")
+				return $("#deviceSubType").val();
+			return $("#deviceType").val();
+		}
+		
+		function getZone() {
+			if ($("#deviceType").val() == "keyboard" || $("#deviceType").val() == "mouse" || $("#deviceType").val() == "headset" || $("#deviceType").val() == "indicator")
+				return $("#zoneToAnimate").val();
+			return null;
+		}
+		
+		function getCustomZoneKeys() {
+			if ($("#deviceType").val() == "rgb-zoned-device" || $("#deviceType").val() == "rgb-per-key-zones") {
+				var czk = $("#customZoneKeys").val();
+				var czkArray = czk.split(",");
+				var czkArrayConverted = []
+				czkArray.forEach((val, index) => {czkArrayConverted.push(roughScale(val))});
+				return czkArrayConverted;
+			}
+			return null;
+		}
+		
+		function hexToRgb(hex) {
+			var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+			return result ? {
+				r: parseInt(result[1], 16),
+				g: parseInt(result[2], 16),
+				b: parseInt(result[3], 16)
+			} : null;
+		}
+		
+		function getColor(numberOfColors, numberOfGradients) {
+			var colorCounter;
+			var colorInputs = [];
+			for (colorCounter = 0; colorCounter < numberOfColors; colorCounter++) {
+				colorInputs.push($("#animationElementColor" + colorCounter));
+			}
+			var gradientCounter;
+			var gradientInputs = [];
+			for (gradientCounter = 0; gradientCounter < numberOfGradients; gradientCounter++) {
+				gradientInputs.push($("#animationElementGradient" + gradientCounter));
+			}
+			
+			if (colorCounter + gradientCounter == 0) {
+				return null;
+			}
+			else if (colorCounter + gradientCounter == 1) {
+				var color = {}
+				if (colorCounter == 1) {
+					var hex = colorInputs[0].find(".animationElementColor").val();
+					var rgb = hexToRgb(hex);
+					color["red"] = rgb.r;
+					color["green"] = rgb.g;
+					color["blue"] = rgb.b;
+				} else {
+					var gradient = {}
+					gradient["zero"] = {}
+					var hex = gradientInputs[0].find(".animationElementGradientStartColor").val();
+					var rgb = hexToRgb(hex);
+					gradient["zero"]["red"] = rgb.r;
+					gradient["zero"]["green"] = rgb.g;
+					gradient["zero"]["blue"] = rgb.b;
+					gradient["hundred"] = {}
+					hex = gradientInputs[0].find(".animationElementGradientEndColor").val();
+					rgb = hexToRgb(hex);
+					gradient["hundred"]["red"] = rgb.r;
+					gradient["hundred"]["green"] = rgb.g;
+					gradient["hundred"]["blue"] = rgb.b;
+					color["gradient"] = gradient;
+				}
+				return color;
+			} else {
+				var color = []
+				if (colorCounter >= 1) {
+					var i;
+					for (i = 0; i < colorCounter; i++) {
+						var currentColor = {}
+						currentColor["low"] = parseInt(colorInputs[i].find(".animationElementMinValue").val(), 10);
+						currentColor["high"] = parseInt(colorInputs[i].find(".animationElementMaxValue").val(), 10);
+						var hex = colorInputs[i].find(".animationElementColor").val();
+						var rgb = hexToRgb(hex);
+						currentColor["color"] = {}
+						currentColor["color"]["red"] = rgb.r;
+						currentColor["color"]["green"] = rgb.g;
+						currentColor["color"]["blue"] = rgb.b;
+						color.push(currentColor);
+					}
+				}
+				if (gradientCounter >= 1) {
+					var i;
+					for (i = 0; i < gradientCounter; i++) {
+						var currentGradient = {}
+						currentGradient["low"] = parseInt(gradientInputs[i].find(".animationElementMinValue").val(), 10);
+						currentGradient["high"] = parseInt(gradientInputs[i].find(".animationElementMaxValue").val(), 10);
+						currentGradient["color"] = {}
+						currentGradient["color"]["gradient"] = {}
+						
+						var hex = gradientInputs[i].find(".animationElementGradientStartColor").val();
+						var rgb = hexToRgb(hex);
+						currentGradient["color"]["gradient"]["zero"] = {}
+						currentGradient["color"]["gradient"]["zero"]["red"] = rgb.r;
+						currentGradient["color"]["gradient"]["zero"]["green"] = rgb.g;
+						currentGradient["color"]["gradient"]["zero"]["blue"] = rgb.b;
+						
+						hex = gradientInputs[i].find(".animationElementGradientEndColor").val();
+						rgb = hexToRgb(hex);
+						currentGradient["color"]["gradient"]["hundred"] = {}
+						currentGradient["color"]["gradient"]["hundred"]["red"] = rgb.r;
+						currentGradient["color"]["gradient"]["hundred"]["green"] = rgb.g;
+						currentGradient["color"]["gradient"]["hundred"]["blue"] = rgb.b;
+						color.push(currentGradient);
+					}
+				}
+				return color;
+			}
+		}
+		
+		function getRate(numberOfBlinkingEffects) {
+			var blinkingEffectCounter;
+			var blinkingEffectInputs = [];
+			for (blinkingEffectCounter = 0; blinkingEffectCounter < numberOfBlinkingEffects; blinkingEffectCounter++) {
+				blinkingEffectInputs.push($("#animationElementBlinkingEffet" + blinkingEffectCounter));
+			}
+			
+			if (blinkingEffectCounter == 0) {
+				return null;
+			} else if (blinkingEffectCounter == 1) {
+				var rate = {}
+				rate["frequency"] = parseInt(blinkingEffectInputs[0].find(".animationElementBlinkingRate").val(), 10);
+				var timeout = parseInt(blinkingEffectInputs[0].find(".animationElementRepeatLimit").val(), 10);
+				if (timeout != 0)
+					rate["repeat_limit"] = timeout;
+				return rate;
+			} else {
+				var rate = {}
+				var frequency = []
+				var repeat_limit = []
+				var i;
+				for (i = 0; i < blinkingEffectCounter; i++) {
+					var currentFrequency = {}
+					currentFrequency["low"] = parseInt(blinkingEffectInputs[i].find(".animationElementMinValue").val(), 10);
+					currentFrequency["high"] = parseInt(blinkingEffectInputs[i].find(".animationElementMaxValue").val(), 10);
+					currentFrequency["frequency"] = parseInt(blinkingEffectInputs[i].find(".animationElementBlinkingRate").val(), 10);
+					frequency.push(currentFrequency);
+					var currentRepeatLimit = {}
+					currentRepeatLimit["low"] = parseInt(blinkingEffectInputs[i].find(".animationElementMinValue").val(), 10);
+					currentRepeatLimit["high"] = parseInt(blinkingEffectInputs[i].find(".animationElementMaxValue").val(), 10);
+					currentRepeatLimit["repeat_limit"] = parseInt(blinkingEffectInputs[i].find(".animationElementRepeatLimit").val(), 10);
+					repeat_limit.push(currentRepeatLimit);
+				}
+				rate["frequency"] = frequency;
+				rate["repeat_limit"] = repeat_limit;
+				return rate;
+			}
+		}
+		
+		function canStart() {
+			if (true)
+				return true;
+			else {
+				showHelp("Some fields are empty or contains wrong values.");
+				return false;
+			}
+		}
+		
+		var interval = 0;
+		function startAnimation(numberOfColors, numberOfGradients, numberOfBlinkingEffects) {
+			var count = $("#minValue").val();
+			var minValue = $("#minValue").val();
+			var maxValue = $("#maxValue").val();
+			var increaseValueEach = $("#IncreaseValueEach").val();
+			var binderObj = {}
+			binderObj["game"] = $("#gameName").val();
+			binderObj["event"] = $("#eventName").val();
+			binderObj["min_value"] = parseInt($("#minValue").val(), 10);
+			binderObj["max_value"] = parseInt($("#maxValue").val(), 10);
+			binderObj["icon_id"] = 0;
+			binderObj["handlers"] = []
+			var handlers = {}
+			handlers["mode"] = $("input[name=mode]:checked").val();
+			handlers["device-type"] = getDeviceType();
+			var zone = getZone();
+			if (zone != null)
+				handlers["zone"] = zone;
+			var czk = getCustomZoneKeys();
+			if (czk != null)
+				handlers["custom-zone-keys"] = czk;
+			handlers["color"] = getColor(numberOfColors, numberOfGradients);
+			var rate = getRate(numberOfBlinkingEffects);
+			if (rate != null)
+				handlers["rate"] = rate;
+			binderObj["handlers"].push(handlers);
+			$.ajax({
+				url: 'http://' + $("#address").val() + '/bind_game_event',
+				type: 'POST',
+				data: JSON.stringify(binderObj),
+				contentType: 'application/json'
+			});
+			$('#code').text(
+				JSON.stringify(binderObj, undefined, 4)
+			);
+			interval = window.setInterval(function() {
+				var triggerObj = {}
+				triggerObj["game"] = $("#gameName").val();
+				triggerObj["event"] = $("#eventName").val();
+				triggerObj["data"] = {}
+				triggerObj["data"]["value"] = count
+				$.ajax({
+					url: 'http://' + $("#address").val() + '/game_event',
+					type: 'POST',
+					data: JSON.stringify(triggerObj),
+					contentType: 'application/json'
+				});
+				if (count < maxValue)
+					++count;
+				else
+					count = minValue;
+			}, increaseValueEach);
+		}
+		
+		function stopAnimation() {
+			if (interval != 0) {
+				window.clearInterval(interval);
+				interval = 0;
+			}
+		}
+		
+		function lockFields() {
+			$("#address").prop("disabled", "disabled");
+			$("#gameName").prop("disabled", "disabled");
+			$("#eventName").prop("disabled", "disabled");
+			$("#minValue").prop("disabled", "disabled");
+			$("#maxValue").prop("disabled", "disabled");
+			$("#color").prop("disabled", "disabled");
+			$("#percent").prop("disabled", "disabled");
+			$("#count").prop("disabled", "disabled");
+			$("#deviceType").prop("disabled", "disabled");
+			$("#deviceSubType").prop("disabled", "disabled");
+			$("#zoneToAnimate").prop("disabled", "disabled");
+			$("#customZoneKeys").prop("disabled", "disabled");
+			$("#ButtonAddColor").prop("disabled", "disabled");
+			$("#ButtonAddGradient").prop("disabled", "disabled");
+			$("#ButtonAddBlinkingEffect").prop("disabled", "disabled");
+			$("#animationWrapper").find("input").prop("disabled", "disabled");
+			$("#IncreaseValueEach").prop("disabled", "disabled");
+		}
+		
+		function unlockFields() {
+			$("#address").prop("disabled", "");
+			$("#gameName").prop("disabled", "");
+			$("#eventName").prop("disabled", "");
+			$("#minValue").prop("disabled", "");
+			$("#maxValue").prop("disabled", "");
+			$("#color").prop("disabled", "");
+			$("#percent").prop("disabled", "");
+			$("#count").prop("disabled", "");
+			$("#deviceType").prop("disabled", "");
+			$("#deviceSubType").prop("disabled", "");
+			$("#zoneToAnimate").prop("disabled", "");
+			$("#customZoneKeys").prop("disabled", "");
+			$("#ButtonAddColor").prop("disabled", "");
+			$("#ButtonAddGradient").prop("disabled", "");
+			$("#ButtonAddBlinkingEffect").prop("disabled", "");
+			$("#animationWrapper").find("input").prop("disabled", "");
+			$("#IncreaseValueEach").prop("disabled", "");
+		}
+		
+		$(document).ready(function() {
+			resetFieldsToDefault();
+			
+			var isPlaying = false;
+			var animationElementColorIterator = 0;
+			var animationElementGradientIterator = 0;
+			var animationElementBlinkEffectIterator = 0;
+			
+			$("main").css("paddingTop", $("header").height());
+			$("main").css("paddingBottom", $("footer").height());
+		
+			$("#deviceType").change(function () {
+				var val = $(this).val();
+				if (val == "none") {
+					$("#zoneToAnimateWrapper").css("display", "none");
+					$("#sequenceWrapper").css("display", "none");
+					$("#deviceSubTypeWrapper").css("display", "none");
+					$("#deviceSubType").html("");
+					$("#zoneToAnimate").html("");
+				} else if (val == "keyboard") {
+					$("#zoneToAnimateWrapper").css("display", "block");
+					$("#sequenceWrapper").css("display", "none");
+					$("#deviceSubTypeWrapper").css("display", "none");
+					$("#deviceSubType").html("");
+					$("#zoneToAnimate").html("<option value='function-keys'>Function keys</option><option value='main-keyboard'>Central area</option><option value='keypad'>Keypad</option><option value='number-keys'>Number keys</option><option value='macro-keys'>Macro keys</option>");
+				} else if (val == "mouse") {
+					$("#zoneToAnimateWrapper").css("display", "block");
+					$("#sequenceWrapper").css("display", "none");
+					$("#deviceSubTypeWrapper").css("display", "none");
+					$("#deviceSubType").html("");
+					$("#zoneToAnimate").html("<option value='wheel'>Wheel</option><option value='logo'>Logo</option><option value='base'>Base station</option>");
+				} else if (val == "headset") {
+					$("#zoneToAnimateWrapper").css("display", "block");
+					$("#sequenceWrapper").css("display", "none");
+					$("#deviceSubTypeWrapper").css("display", "none");
+					$("#deviceSubType").html("");
+					$("#zoneToAnimate").html("<option value='earcups'>Earcups</option>");
+				} else if (val == "indicator") {
+					$("#zoneToAnimateWrapper").css("display", "block");
+					$("#sequenceWrapper").css("display", "none");
+					$("#deviceSubTypeWrapper").css("display", "none");
+					$("#deviceSubType").html("");
+					$("#zoneToAnimate").html("<option value='one'>The main LED</option>");
+				} else if (val == "rgb-zoned-device") {
+					$("#zoneToAnimateWrapper").css("display", "none");
+					$("#sequenceWrapper").css("display", "block");
+					$("#deviceSubTypeWrapper").css("display", "block");
+					$("#deviceSubType").html("<option value='rgb-1-zone'>1 zone</option><option value='rgb-2-zone'>2 zones</option><option value='rgb-3-zone'>3 zones</option><option value='rgb-5-zone'>5 zones</option><option value='rgb-8-zone'>8 zones</option><option value='rgb-12-zone'>12 zones</option><option value='rgb-17-zone'>17 zones</option><option value='rgb-24-zone'>24 zones</option><option value='rgb-52-zone'>52 zones</option><option value='rgb-103-zone'>103 zones</option>");
+					$("#zoneToAnimate").html("");
+				} else if (val == "rgb-per-key-zones") {
+					$("#zoneToAnimateWrapper").css("display", "none");
+					$("#sequenceWrapper").css("display", "block");
+					$("#deviceSubTypeWrapper").css("display", "none");
+					$("#deviceSubType").html("");
+					$("#zoneToAnimate").html("");
+				}
+			});
+			
+			$("#ButtonAddColor").click(function() {
+				$("#animationWrapper").append("<div class='animationElement' id='animationElementColor" + animationElementColorIterator++ + "'><label>Enter a color [#123456]: <input type='text' class='animationElementColor' /></label><br /><label>From (value): <input type='number' class='animationElementMinValue' /></label><label> to (value): <input type='number' class='animationElementMaxValue' /></label></div>");
+			});
+			
+			$("#ButtonAddGradient").click(function() {
+				$("#animationWrapper").append("<div class='animationElement' id='animationElementGradient" + animationElementGradientIterator++ + "'><label>Enter a gradient starting color [#123456]: <input type='text' class='animationElementGradientStartColor' /></label><br /><label>Enter a gradient ending color [#123456]: <input type='text' class='animationElementGradientEndColor' /></label><br /><label>From (value): <input type='number' class='animationElementMinValue' /></label><label> to (value): <input type='number' class='animationElementMaxValue' /></label></div>");
+			});
+			
+			$("#ButtonAddBlinkingEffect").click(function() {
+				$("#animationWrapper").append("<div class='animationElement' id='animationElementBlinkingEffet" + animationElementBlinkEffectIterator++ + "'><label>Enter a blinking per second rate: <input type='number' class='animationElementBlinkingRate' /></label><br /><label>From (value): <input type='number' class='animationElementMinValue' /></label><label> to (value): <input type='number' class='animationElementMaxValue' /></label><br /><label>Enter a repeat occurrence limit [0 = no limit]: <input type='number' class='animationElementRepeatLimit' value='0' /></label></div>");
+			});
+			
+			$("#ButtonAddHandler").click(function() {
+				var add = $("#addHandler1Wrapper").content();
+			});
+		
+			$('#ButtonPlayStop').click(function() {
+				if (isPlaying) {
+					isPlaying = false;
+					stopAnimation();
+					$("#ButtonPlayStop").attr("src", "web-files/icon-play.png");
+					unlockFields();
+					$("#exportScriptWrapper").css("display", "none");
+				} else if (canStart()) {
+					isPlaying = true;
+					startAnimation(animationElementColorIterator, animationElementGradientIterator, animationElementBlinkEffectIterator);
+					$("#ButtonPlayStop").attr("src", "web-files/icon-stop.png");
+					lockFields();
+					$("#exportScriptWrapper").css("display", "block");
+				}
+			});
+			
+			$('#ButtonCopy').click(function() {
+				var text = $("#code").html();
+				
+				function listener(e) {
+					e.clipboardData.setData("text/html", text);
+					e.clipboardData.setData("text/plain", text);
+					e.preventDefault();
+				}
+
+				document.addEventListener("copy", listener);
+				document.execCommand("copy");
+				document.removeEventListener("copy", listener);
+			});
+			
+			$('#ButtonDownload').click(function() {
+				var text = $("#code").html();
+				
+				var element = document.createElement('a');
+				element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+				element.setAttribute('download', "EventBinder.json");
+
+				element.style.display = 'none';
+				document.body.appendChild(element);
+
+				element.click();
+
+				document.body.removeChild(element);
+			});
+		});
+		
+		function showHelp(msg) {
+			alert(msg);
+		}
+	</script>
+</head>
+<body>
+	<header style="text-align:center;">
+		<h1 id="mainTitle">Shiftlight script generator for Assetto Corsa&reg;</h1>
+		<h2 id="mainSubTitle">Generate shiftlight animations to use with your GameSense&reg; product</h2>
+		<h3><a href="custom_event_tester.html">Or you can test your self-imported script on the tester page</a></h3>
+	</header>
+	<main>
+		 <div class="row">
+			<div class="column">
+				<h2>Configure your binder</h2>
+				<p>Enter a name for your game [A-Z, 0-9, -, _]:</p>
+				<div class="formRow">
+					<input type="text" value="ASSETTOCORSA" id="gameName" />
+					<div class="iconHelp" onclick="showHelp('If you don\'t know why you would change this name, then don\'t do it.\n\nThe generated script would not work with the gamesense_shiftlight plugin.')"></div>
+				</div>
+				<p>Enter a name for your event [A-Z, 0-9, -, _]:</p>
+				<div class="formRow">
+					<input type="text" value="SHIFTLIGHT" id="eventName" />
+					<div class="iconHelp" onclick="showHelp('You can switch between the default three events names:\n\n- YELLOWSHIFTLIGHT\n- REDSHIFTLIGHT\n- OPTIMALSHIFTLIGHT\n\n... depending of the animation you will to create.')"></div>
+				</div>
+				<p>Enter the minimum value to be handled:</p>
+				<div class="formRow">
+					<input type="number" value="0" id="minValue" />
+					<div class="iconHelp" onclick="showHelp('This is the lowest value the animation script will have to handle.\n\nIn most cases, 0 (zero) is the right one to use as an OFF state.')"></div>
+				</div>
+				<p>Enter the maximum value to be handled:</p>
+				<div class="formRow">
+					<input type="number" value="100" id="maxValue" />
+					<div class="iconHelp" onclick="showHelp('This is the highest value your animation script will have to handle.\n\nDepending of the mode you will choose on the next step, it may have more sense to use one value upon another.\n\nExamples:\n- If you plan to use the percentage mode, you should probably leave the default 100 value.\n- If you plan to use a simple ON/OFF with the color mode, then you should have a try with 1.\n- If you plan to decide how many LEDs have to turn ON with a precise number, you should use the count mode\n   with a maximum value based on the quantity of LEDs available on your device (or in the selected region of your device).')"></div>
+				</div>
+			</div>
+			<div class="column">
+				<h2>Configure the handler of your binder</h2>
+				<p>How should sent values act as?</p>
+				<div class="formRow">
+					<input type="radio" name="mode" id="color" value="color" />
+					<label for="color">Color</label>
+					<input type="radio" name="mode" id="percent" value="percent" />
+					<label for="percent">Percent</label>
+					<input type="radio" name="mode" id="count" value="count" />
+					<label for="count">Count</label>
+					<div class="iconHelp" onclick="showHelp('Color: all LEDs in the selected zone will use the same color that you will have mapped with the given value.\nPercent: all LEDs in the selected zone will proportionally turn on, based on the percentage value (from 0 to 100), where each value can be mapped to a different color.\nCount: the amount of LEDs turning on directly depends on the value, while the general color can be mapped as always.')"></div>
+				</div>
+				<p>Choose your device type:</p>
+				<div class="formRow">
+					<select name="deviceType" id="deviceType">
+						<option value="" selected> </option>
+						<option value="keyboard">Keyboard</option>
+						<option value="mouse">Mouse</option>
+						<option value="headset">Headset</option>
+						<option value="indicator">Indicator</option>
+						<option value="rgb-zoned-device">RGB Zoned Device</option>
+						<option value="rgb-per-key-zones">RGB Per Key Zones</option>
+					</select>
+					<div class="iconHelp" onclick="showHelp('Select the type of your device.\n\nRGB Zoned Device is a generic system used for specific items.\nSee https://github.com/SteelSeries/gamesense-sdk/blob/master/doc/api/standard-zones.md#device-types-by-number-of-rgb-zones for more infos.\n\nRGB Per Key Zones allows handling of complex keyboards patterns with a zone defined for each key.\nSee https://github.com/SteelSeries/gamesense-sdk/blob/master/doc/api/standard-zones.md#rgb-per-key-zones for more infos.')"></div>
+				</div>
+				<div id="deviceSubTypeWrapper" style="display:none;">
+					<p>Choose the sub-type of selected device type:</p>
+					<div class="formRow">
+					<select name="deviceSubType" id="deviceSubType">
+					</select>
+						<div class="iconHelp" onclick="showHelp('Select the matching number of LEDs available on your item.\n\nSee https://github.com/SteelSeries/gamesense-sdk/blob/master/doc/api/standard-zones.md#device-types-by-number-of-rgb-zones for more infos.')"></div>
+					</div>
+				</div>
+				<div id="zoneToAnimateWrapper" style="display:none;">
+					<p>Choose the zone to animate:</p>
+					<div class="formRow">
+						<select name="zoneToAnimate" id="zoneToAnimate">
+						</select>
+						<div class="iconHelp" onclick="showHelp('Select the area of LEDs you want to animate.')"></div>
+					</div>
+				</div>
+				<div id="sequenceWrapper" style="display:none;">
+					<p>Enter a sequence of LEDs:</p>
+					<div class="formRow">
+						<input type="text" id="customZoneKeys" />
+						<div class="iconHelp" onclick="showHelp('Enter the name of the area you want to animate on a keyboard, mouse, headset or indicator, or all the specific LEDs reference (separated with a comma).\n\nMore informations available on the following link: https://github.com/SteelSeries/gamesense-sdk/blob/master/doc/api/standard-zones.md')"></div>
+					</div>
+				</div>
+				<p>Create your LEDs animation:</p>
+				<input type="button" value="Add color" id="ButtonAddColor" />
+				<input type="button" value="Add gradient" id="ButtonAddGradient" />
+				<input type="button" value="Add blinking effect" id="ButtonAddBlinkingEffect" />
+				<div id="animationWrapper"></div>
+			</div>
+			<div class="column">
+				<h2>Configure the script executor</h2>
+				<p>Enter your event catcher address (including port):</p>
+				<div class="formRow">
+					<input type="text" value="127.0.0.1:50348" id="address" />
+					<div class="iconHelp" onclick="showHelp('By default, the address will always be 127.0.0.1 and be followed by a 5 digits port.\n\nThis port can be found in the coreProps.json file that\'s located under %PROGRAMDATA%/SteelSeries/SteelSeries Engine 3/\n\nIf you cannot find out about these folders on your computer, then you probably didn\'t install the SteelSeries Engine app yet.');"></div>
+				</div>
+				<p>Choose a duration between each tick:</p>
+				<div class="formRow">
+					<input type="number" value="100" id="IncreaseValueEach" />
+					<div class="iconHelp" onclick="showHelp('To test-run your animation, another script will loop and trigger each value between your minimum and maximum values. There you can choose the duration between each trigger.');"></div>
+				</div>
+				<h2>Execute the script</h2>
+				<input type="image" id="ButtonPlayStop" alt="Play/Stop" src="web-files/icon-play.png">
+				<div id="exportScriptWrapper" style="display:none;">
+					<h2>Export the script</h2>
+					<a href="#">How can I use it?</a>
+					<pre id="preCode"><code id="code"></code></pre>
+					<input type="button" value="Copy to clipboard" id="ButtonCopy" />
+					<input type="button" value="Download file" id="ButtonDownload" />
+				</div>
+			</div>
+		</div> 
+	</main>
+	<footer>
+		<p><a href="https://www.assettocorsa.net/">Assetto Corsa&reg;</a> is a sim racing video game developed by <a href="http://www.kunos-simulazioni.com">Kunos Simulazioni&trade;</a>. GameSense&reg; is an embedded LED technology developed by <a href="https://steelseries.com/">SteelSeries&trade;</a>. All product names, logos, and brands are property of their respective owners.</p>
+		<p>This script generator and its running Assetto Corsa&reg; plugin were made with love by <a href="http://www.leeyo.be/">leeyo.be</a> (<a href="https://github.com/lionelmennig/GamesenseShiftlight">GitHub</a>). Feel free to make modifications to the scripts and don't hesitate to create any interesting pull request on GitHub, but please leave the initial credits.</p>
+	</footer>
+</body>
+</html>

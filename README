@@ -1,0 +1,29 @@
+GitHub: https://github.com/lionelmennig/GamesenseShiftlight
+
+Thank you for downloading this GamesenseShiftlight!
+
+Basically, it is easy to install, enable/disable, configure and personalize:
+
+Installation:
+- Once you installed the Sidekick plugin (https://www.racedepartment.com/downloads/sidekick.11007/), just go to its directory which should be located under
+  your Steam/SteamLibrary folder, then "steamapps" > "common" > "assettocorsa" > "apps" > "python" > "Sidekick".
+  This is where you should move the "gamesense_shiftlight" directory to, alongside its own version of the "Sidekick.py" file (and the "Sidekick_backup.py").
+
+Enable/disable:
+- If you wish to disable the GameSense plugin but keep the Sidekick active, just rename the "Sidekick.py" file to whatever you want to (e.g. "Sidekick_shiftlight.py"),
+  then rename the "Sidekick_backup.py" as "Sidekick.py".
+- On the other hand, when you want to get it back up, do the exact opposite: rename current "Sidekick.py" file to another name (keep using the "_backup" keyword if it is easier for you),
+  then rename the previously renamed file (in this example "Sidekick_shiftlight.py") to "Sidekick.py". As simple as that!
+
+Configure:
+- Most available configurations are available from the "config.ini" file, located in the "gamesense_shiftlight" folder. There you can choose the type of events you want to use,
+  and those you do not want to use. Note: each available event should always be listed around the modifiable parameter for clarity.
+
+Personalize:
+- You might want to create your own event(s). To do so, first have a look in the "events" folder to understand how it goes: it is sub-divided by folders named after
+  the three functionalities of the plugin (yellow, red, optimal), which are then sub-divided by a folder named after each event, mostly hosting a JSON file and sometimes a PYTHON one.
+  When you create your own animation, just make a new directory with the name of your event (please avoid spaces in its name), then add your JSON script inside it and name the file
+  with the common "[Type]EventBinder.json" (e.g. "YellowEventBinder.json"). You can now edit the "config.ini" file to add the name of your event in the matching list, and have a try
+  also putting the name as the active event. If your script works with the "create_your_own_script" tester, it should also work with your favorite videogame!
+  Note: basically, the game will trigger values between 0 and 100 to animate your event (YELLOW and RED ones), and between 0 and 2 to animate OPTIMAL events (where 0 is OFF, 1 is ON, 2 is Blinking).
+        If you own some Python skills, you could make your own "Utils" PYTHON file to trigger different values for your newly created personal event.

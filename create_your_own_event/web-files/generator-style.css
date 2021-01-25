@@ -1,0 +1,33 @@
+/* Page related */
+
+/* Header related */
+
+/* Content related */
+.column {
+	float: left;
+	width: 33.33%;
+}
+#animationWrapper {
+	margin-top: 20px;
+}
+.animationElement {
+	padding: 20px;
+	border: 2px #444 dashed;
+	display: table;
+	margin: auto auto 10px auto;
+}
+.animationElementColor, .animationElementGradientStartColor, .animationElementGradientEndColor, .animationElementBlinkingRate, .animationElementMinValue {
+	margin-bottom: 10px;
+}
+#preCode {
+	text-align:left;
+	background-color: #333;
+	color: #91c774;
+	padding: 1%;
+	white-space: pre-wrap;
+    height: auto;
+    max-height: 250px;
+    overflow: auto;
+}
+
+/* Footer related */

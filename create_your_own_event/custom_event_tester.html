@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<link rel="stylesheet" href="web-files/common-style.css">
+	<link rel="stylesheet" href="web-files/tester-style.css">
+	<script src="web-files/jquery-2.2.0.min.js"></script>
+	<script>
+		function roughScale(x) {
+			const parsed = Number.parseInt(x, 10);
+			if (Number.isNaN(parsed)) {
+				return x;
+			}
+			return parsed;
+		}
+		
+		function canStart() {
+			if (true)
+				return true;
+			else {
+				showHelp("Some fields are empty or contains wrong values.");
+				return false;
+			}
+		}
+		
+		var interval = 0;
+		function startAnimation() {
+			var increaseValueEach = $("#IncreaseValueEach").val();
+			var textareaVal = $("#scriptContent").val();
+			try {
+				var binderObj = JSON.parse(textareaVal);
+			} catch (ex) {
+				showHelp(ex);
+			}
+			var count = binderObj["min_value"];
+			var minValue = binderObj["min_value"];
+			var maxValue = binderObj["max_value"];
+			$.ajax({
+				url: 'http://' + $("#address").val() + '/bind_game_event',
+				type: 'POST',
+				data: textareaVal,
+				contentType: 'application/json'
+			});
+			interval = window.setInterval(function() {
+				var triggerObj = {}
+				triggerObj["game"] = binderObj["game"];
+				triggerObj["event"] = binderObj["event"];
+				triggerObj["data"] = {}
+				triggerObj["data"]["value"] = count
+				$.ajax({
+					url: 'http://' + $("#address").val() + '/game_event',
+					type: 'POST',
+					data: JSON.stringify(triggerObj),
+					contentType: 'application/json'
+				});
+				if (count < maxValue)
+					++count;
+				else
+					count = minValue;
+			}, increaseValueEach);
+		}
+		
+		function stopAnimation() {
+			if (interval != 0) {
+				window.clearInterval(interval);
+				interval = 0;
+			}
+		}
+		
+		function lockFields() {
+			$("#address").prop("disabled", "disabled");
+			$("#IncreaseValueEach").prop("disabled", "disabled");
+		}
+		
+		function unlockFields() {
+			$("#address").prop("disabled", "");
+			$("#IncreaseValueEach").prop("disabled", "");
+		}
+		
+		$(document).ready(function() {
+			var isPlaying = false;
+			
+			$("main").css("paddingTop", $("header").height());
+			$("main").css("paddingBottom", $("footer").height());
+		
+			$('#ButtonPlayStop').click(function() {
+				if (isPlaying) {
+					isPlaying = false;
+					stopAnimation();
+					$("#ButtonPlayStop").attr("src", "web-files/icon-play.png");
+					unlockFields();
+				} else if (canStart()) {
+					isPlaying = true;
+					startAnimation();
+					$("#ButtonPlayStop").attr("src", "web-files/icon-stop.png");
+					lockFields();
+				}
+			});
+			
+			$('#ButtonCopy').click(function() {
+				var text = $("#scriptContent").val();
+				
+				function listener(e) {
+					e.clipboardData.setData("text/html", text);
+					e.clipboardData.setData("text/plain", text);
+					e.preventDefault();
+				}
+
+				document.addEventListener("copy", listener);
+				document.execCommand("copy");
+				document.removeEventListener("copy", listener);
+			});
+			
+			$('#ButtonDownload').click(function() {
+				var text = $("#scriptContent").val();
+				
+				var element = document.createElement('a');
+				element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+				element.setAttribute('download', "EventBinder.json");
+
+				element.style.display = 'none';
+				document.body.appendChild(element);
+
+				element.click();
+
+				document.body.removeChild(element);
+			});
+		});
+		
+		function showHelp(msg) {
+			alert(msg);
+		}
+	</script>
+</head>
+<body>
+	<header style="text-align:center;">
+		<h1 id="mainTitle">Shiftlight script tester for Assetto Corsa&reg;</h1>
+		<h2 id="mainSubTitle">Test your shiftlight animations to use with a GameSense&reg; product</h2>
+		<h3><a href="event_generator.html">Or you can generate a brand new script on the generator page</a></h3>
+	</header>
+	<main>
+		 <div class="row">
+			<div class="column">
+				<p></p>
+			</div>
+			<div class="column">
+				<h2>Enter/write your binder script</h2>
+				<textarea id="scriptContent"></textarea>
+				<input type="button" value="Copy to clipboard" id="ButtonCopy" style="margin-top:20px;" />
+				<input type="button" value="Download file" id="ButtonDownload" />
+			</div>
+			<div class="column">
+				<h2>Configure the script executor</h2>
+				<p>Enter your event catcher address (including port):</p>
+				<div class="formRow">
+					<input type="text" value="127.0.0.1:50348" id="address" />
+					<div class="iconHelp" onclick="showHelp('By default, the address will always be 127.0.0.1 and be followed by a 5 digits port.\n\nThis port can be found in the coreProps.json file that\'s located under %PROGRAMDATA%/SteelSeries/SteelSeries Engine 3/\n\nIf you cannot find out about these folders on your computer, then you probably didn\'t install the SteelSeries Engine app yet.');"></div>
+				</div>
+				<p>Choose a duration between each tick:</p>
+				<div class="formRow">
+					<input type="number" value="100" id="IncreaseValueEach" />
+					<div class="iconHelp" onclick="showHelp('To test-run your animation, another script will loop and trigger each value between your minimum and maximum values. There you can choose the duration between each trigger.');"></div>
+				</div>
+				<h2>Execute the script</h2>
+				<input type="image" id="ButtonPlayStop" alt="Play/Stop" src="web-files/icon-play.png">
+			</div>
+			<div class="column">
+				<p></p>
+			</div>
+		</div> 
+	</main>
+	<footer>
+		<p><a href="https://www.assettocorsa.net/">Assetto Corsa&reg;</a> is a sim racing video game developed by <a href="http://www.kunos-simulazioni.com">Kunos Simulazioni&trade;</a>. GameSense&reg; is an embedded LED technology developed by <a href="https://steelseries.com/">SteelSeries&trade;</a>. All product names, logos, and brands are property of their respective owners.</p>
+		<p>This script tester and its running Assetto Corsa&reg; plugin were made with love by <a href="http://www.leeyo.be/">leeyo.be</a> (<a href="https://github.com/lionelmennig/GamesenseShiftlight">GitHub</a>). Feel free to make modifications to the scripts and don't hesitate to create any interesting pull request on GitHub, but please leave the initial credits.</p>
+	</footer>
+</body>
+</html>

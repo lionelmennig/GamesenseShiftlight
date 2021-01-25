@@ -1,0 +1,77 @@
+/* Page related */
+html, body {
+	padding: 0;
+	margin: 0;
+	background-color: #555;
+}
+a {
+	text-decoration: none;
+	color: #FF0000;
+}
+
+/* Header related */
+header {
+	position: fixed;
+	width: 100%;
+	top: 0;
+	background-color: #333;
+}
+#mainTitle {
+	margin: 20px 0 0 0;
+	color: #FFF;
+}
+#mainSubTitle {
+	color: #FFF;
+}
+
+/* Content related */
+main {
+	text-align: center;
+	padding-left: 5%;
+	padding-right: 5%;
+}
+.row:after {
+	content: "";
+	display: table;
+	clear: both;
+}
+.formRow {
+    margin: auto;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+input, select {
+	background-color: #333;
+	border: 1px #000 solid;
+	color: #DDD;
+}
+input:disabled, select:disabled{
+	background-color: #333;
+	border: 1px #000 dashed;
+	color: #666;
+}
+#ButtonPlayStop {
+	background-color: transparent;
+	border: 0;
+}
+.iconHelp {
+	width: 32px;
+	height: 32px;
+	background-image: url("icon-help.png");
+	background-size: 100% 100%;
+	margin-left: 1%;
+}
+#IncreaseValueEach {
+	margin-top: 10px;
+}
+
+/* Footer related */
+footer {
+	text-align: center;
+	position: fixed;
+	width: 100%;
+	bottom: 0;
+	background-color: #333;
+	color: #FFF;
+}
